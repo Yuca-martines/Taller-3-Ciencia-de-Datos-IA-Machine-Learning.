@@ -1,0 +1,40 @@
+# Entornos virtuales de Python
+venv/
+env/
+.env/
+.venv/
+
+# Cache de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de distribución / empaquetado
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Archivos zip pesados (si no quieres subirlos)
+# *.zip

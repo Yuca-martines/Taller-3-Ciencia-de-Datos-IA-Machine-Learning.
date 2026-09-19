@@ -1,0 +1,306 @@
+/* ==========================================================
+   REGLAS ORIGINALES DEL PROYECTO (sin cambios)
+   ========================================================== */
+.drop-zone-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+video,
+img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.transition {
+  transition: all 0.3s ease;
+}
+
+/* ==========================================================
+   NUEVO ESTILO VISUAL
+   Idea: la interfaz es un visor de cámara. Las esquinas de
+   enfoque enmarcan el título, las imágenes y el video, igual
+   que los recuadros verdes que OpenCV dibuja sobre los rostros.
+   ========================================================== */
+
+/* ---------- 1. Paleta y tipografía ---------- */
+:root {
+  --ink: #0f2a1d;        /* verde bosque muy oscuro: texto y superficies oscuras */
+  --ink-soft: #3f5b4a;   /* texto secundario */
+  --paper: #eef2ea;      /* fondo de la página */
+  --surface: #ffffff;    /* paneles */
+  --sena: #39a900;       /* verde SENA: acción principal y marca */
+  --sena-light: #4ac613; /* hover del verde */
+  --mango: #ffb627;      /* acento: contador y cambio de cámara */
+  --coral: #c7361a;      /* apagar / detener */
+
+  /* Bootstrap: se redefinen sus variables para que utilidades como
+     bg-primary (arrastrar imagen) y text-primary (spinner) usen la nueva paleta */
+  --bs-primary: #39a900;
+  --bs-primary-rgb: 57, 169, 0;
+  --bs-body-font-family: "Bricolage Grotesque", system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --bs-body-color: var(--ink);
+  --bs-body-bg: var(--paper);
+}
+
+body {
+  font-family: var(--bs-body-font-family);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--mango);
+  color: var(--ink);
+}
+
+/* ---------- 2. Esquinas de visor (motivo reutilizable) ---------- */
+.corners {
+  position: relative;
+}
+.corners::before {
+  content: "";
+  position: absolute;
+  inset: var(--corner-inset, 10px);
+  pointer-events: none;
+  --c: var(--corner-color, var(--ink));
+  --t: var(--corner-thick, 2px);
+  --l: var(--corner-len, 22px);
+  background:
+    linear-gradient(var(--c) 0 0) top left / var(--l) var(--t),
+    linear-gradient(var(--c) 0 0) top left / var(--t) var(--l),
+    linear-gradient(var(--c) 0 0) top right / var(--l) var(--t),
+    linear-gradient(var(--c) 0 0) top right / var(--t) var(--l),
+    linear-gradient(var(--c) 0 0) bottom left / var(--l) var(--t),
+    linear-gradient(var(--c) 0 0) bottom left / var(--t) var(--l),
+    linear-gradient(var(--c) 0 0) bottom right / var(--l) var(--t),
+    linear-gradient(var(--c) 0 0) bottom right / var(--t) var(--l);
+  background-repeat: no-repeat;
+}
+
+/* ---------- 3. Encabezado ---------- */
+.site-header {
+  background: var(--sena);
+  color: var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+}
+.hero-frame {
+  padding: 1.75rem 1.5rem;
+  --corner-inset: 0;
+  --corner-thick: 3px;
+  --corner-len: 30px;
+}
+.hero-title {
+  margin: 0 0 0.75rem;
+  max-width: 22ch;
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.hero-lead {
+  max-width: 46ch;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+@media (min-width: 768px) {
+  .hero-frame {
+    padding: 2.5rem 3rem;
+  }
+}
+
+/* ---------- 4. Selector de modo (Subir archivo / Usar cámara) ---------- */
+.mode-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+}
+.mode-btn {
+  font: inherit;
+  font-weight: 700;
+  padding: 0.55rem 1.4rem;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.mode-btn:hover {
+  background: #e3ecdb;
+}
+.mode-btn.active,
+.mode-btn.active:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ---------- 5. Paneles ---------- */
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+}
+.panel-body {
+  flex: 1 1 auto;
+}
+
+/* ---------- 6. Zona para arrastrar la imagen ---------- */
+.drop-zone {
+  padding: 3rem 1.5rem;
+  background: var(--paper);
+  border: 2px dashed var(--ink-soft);
+  border-radius: 8px;
+  text-align: center;
+}
+.drop-zone p {
+  color: var(--ink);
+  font-weight: 600;
+}
+.drop-zone:hover {
+  background: #e3ecdb;
+  border-color: var(--ink);
+}
+.drop-zone:focus-within {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* ---------- 7. Botones de acción ---------- */
+.btn {
+  --bs-btn-border-radius: 999px;
+  --bs-btn-font-weight: 700;
+  --bs-btn-border-width: 1.5px;
+  --bs-btn-disabled-opacity: 1;
+  --bs-btn-disabled-color: #71857a;
+  --bs-btn-disabled-bg: #dce4d7;
+  --bs-btn-disabled-border-color: #b5c2b0;
+}
+.btn-shutter {
+  --bs-btn-color: var(--ink);
+  --bs-btn-bg: var(--sena);
+  --bs-btn-border-color: var(--ink);
+  --bs-btn-hover-color: var(--ink);
+  --bs-btn-hover-bg: var(--sena-light);
+  --bs-btn-hover-border-color: var(--ink);
+  --bs-btn-active-color: var(--paper);
+  --bs-btn-active-bg: var(--ink);
+  --bs-btn-active-border-color: var(--ink);
+}
+.btn-swap {
+  --bs-btn-color: var(--ink);
+  --bs-btn-bg: var(--mango);
+  --bs-btn-border-color: var(--ink);
+  --bs-btn-hover-color: var(--ink);
+  --bs-btn-hover-bg: #ffc552;
+  --bs-btn-hover-border-color: var(--ink);
+  --bs-btn-active-color: var(--paper);
+  --bs-btn-active-bg: var(--ink);
+  --bs-btn-active-border-color: var(--ink);
+}
+.btn-stop {
+  --bs-btn-color: #ffffff;
+  --bs-btn-bg: var(--coral);
+  --bs-btn-border-color: var(--ink);
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: #b02e15;
+  --bs-btn-hover-border-color: var(--ink);
+  --bs-btn-active-color: var(--paper);
+  --bs-btn-active-bg: var(--ink);
+  --bs-btn-active-border-color: var(--ink);
+}
+
+/* Foco visible para teclado */
+.btn:focus-visible,
+.mode-btn:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+
+/* ---------- 8. Visor de la cámara ---------- */
+.viewfinder {
+  min-height: 250px;
+  background: var(--ink);
+  border-radius: 6px;
+  overflow: hidden;
+  --corner-color: var(--sena);
+  --corner-inset: 12px;
+  --corner-thick: 3px;
+  --corner-len: 26px;
+}
+
+/* ---------- 9. Marcos de imagen (origen y resultado) ---------- */
+.frame {
+  min-height: 180px;
+  padding: 1.5rem;
+  background: var(--paper);
+  border-radius: 4px;
+  --corner-inset: 8px;
+  --corner-len: 18px;
+}
+.frame-title {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.frame img {
+  border-radius: 2px;
+}
+#loader {
+  color: var(--ink) !important;
+}
+
+/* ---------- 10. Resultados del análisis ---------- */
+.readout {
+  padding: 0.85rem 1.1rem;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 6px;
+}
+.readout-title {
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--sena);
+}
+.count {
+  display: inline-block;
+  min-width: 2.2ch;
+  padding: 0.05rem 0.7rem;
+  background: var(--mango);
+  color: var(--ink);
+  border-radius: 999px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums; /* el contador cambia rápido con la cámara: evita saltos */
+}
+
+/* ---------- 11. Pie de página ---------- */
+.site-footer {
+  background: var(--ink);
+  color: #c9d6c8;
+  border-top: 4px solid var(--sena);
+}
+
+/* ---------- 12. Accesibilidad ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .transition,
+  .mode-btn {
+    transition: none;
+  }
+}
